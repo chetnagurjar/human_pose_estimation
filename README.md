@@ -1,34 +1,49 @@
 # Human Pose Estimation Using YOLO and OpenCV
 
+<p align="center">
+  <b>A Computer Vision Project for Human Movement and Pose Detection</b>
+</p>
+
+<p align="center">
+  <img src="results/skeleton_preview.png" alt="Human Pose Estimation Skeleton Output" width="500">
+</p>
+
 ## 📌 Project Overview
 
-This project implements Human Pose Estimation using Computer Vision techniques to detect and track human body movements from video input.
+Human Pose Estimation is a Computer Vision technique used to identify and locate important body joints and keypoints in an image or video.
 
-Using **YOLO Pose** and **OpenCV**, the system identifies 17 human body keypoints based on the COCO dataset and visualizes the detected body structure as a skeleton.
+This project implements human pose estimation on a video containing human movement or dancing using **YOLO Pose and OpenCV**.
 
-The original video frame is replaced with a completely black background, displaying only white keypoints (dots) and connecting lines. This makes it possible to visualize human movement without displaying the person's actual appearance.
+The system detects 17 human body keypoints based on the COCO format and connects them to generate a skeletal representation of the human body.
 
-## 🎯 Objectives
+Instead of displaying the original video, the system generates a completely black background with only white dots representing body joints and white lines connecting them. This allows human movements to be visualized without displaying the person's actual appearance.
+
+## 🎯 Project Objectives
 
 - Perform human pose estimation on a video containing human movement.
 - Detect 17 human body keypoints using the COCO format.
-- Identify body joints such as shoulders, elbows, wrists, hips, knees, and ankles.
+- Identify important body joints such as shoulders, elbows, wrists, hips, knees, and ankles.
+- Extract keypoint coordinates and confidence scores.
 - Connect detected keypoints to generate a human skeleton.
-- Remove the original video background and person.
-- Generate a skeleton-only output video with a black background and white keypoints.
+- Replace the original video background with a completely black background.
+- Display only white keypoints and connecting lines.
+- Generate and save the processed skeleton-only output video.
 
 ## 🛠️ Technologies Used
 
-- **Python** – Main programming language.
-- **YOLO Pose (Ultralytics)** – Human pose detection and keypoint extraction.
-- **OpenCV** – Video processing, frame manipulation, and skeleton visualization.
-- **NumPy** – Numerical operations and black-frame generation.
+| Technology | Purpose |
+|---|---|
+| Python | Main programming language |
+| YOLO Pose (Ultralytics) | Human pose detection |
+| OpenCV | Video processing and skeleton visualization |
+| NumPy | Numerical operations and black-frame generation |
+| COCO Dataset | Standard 17-keypoint human pose format |
 
 ## 🧠 COCO 17 Keypoints
 
-The project uses the COCO human pose estimation format, which consists of 17 body keypoints:
+The project uses the COCO human pose estimation format, which consists of 17 body keypoints.
 
-| Index | Keypoint |
+| Index | Body Part |
 |---|---|
 | 0 | Nose |
 | 1 | Left Eye |
@@ -48,93 +63,182 @@ The project uses the COCO human pose estimation format, which consists of 17 bod
 | 15 | Left Ankle |
 | 16 | Right Ankle |
 
-## ⚙️ Project Workflow
+Each detected keypoint contains:
+- X-coordinate
+- Y-coordinate
+- Confidence score
 
-1. **Video Input:** Load a video containing a person performing movements or dancing.
-2. **Pose Detection:** Process each video frame using the pretrained YOLO Pose model.
-3. **Keypoint Extraction:** Extract the coordinates and confidence scores of 17 COCO keypoints.
-4. **Skeleton Generation:** Connect the detected body joints using lines.
-5. **Background Replacement:** Create a black frame and draw only the detected skeleton.
-6. **Video Generation:** Combine the processed frames and save them as an output video.
+The confidence score indicates how certain the model is about the detected body joint.
+
+## ⚙️ Project Methodology
+
+The project follows these steps:
+
+### 1. Video Input
+
+A video containing a person performing dancing movements or other physical activities is provided as input.
+
+### 2. Pose Detection
+
+The pretrained YOLO Pose model processes the video frames and identifies human body keypoints.
+
+### 3. Keypoint Extraction
+
+The system extracts the coordinates and confidence scores of the 17 COCO keypoints for each detected person.
+
+### 4. Confidence Filtering
+
+A confidence threshold is applied to filter out keypoints with low detection confidence.
+
+### 5. Skeleton Generation
+
+OpenCV is used to connect detected body joints using lines and represent individual joints using white circles.
+
+### 6. Background Replacement
+
+A new black frame is generated for every input frame. The original person and background are not drawn in the output.
+
+### 7. Video Generation
+
+All processed frames are combined into a video while maintaining the original frame rate and resolution.
+
+## 🔄 Project Workflow
+
+```text
+       Input Video
+            |
+            v
+    Video Frame Extraction
+            |
+            v
+     YOLO Pose Detection
+            |
+            v
+   COCO 17 Keypoint Extraction
+            |
+            v
+    Confidence Filtering
+            |
+            v
+     Skeleton Generation
+            |
+            v
+    Black Background Creation
+            |
+            v
+    White Dots and Lines
+            |
+            v
+     Processed Video Output
+```
 
 ## 📂 Project Structure
 
 ```text
-Human-Pose-Estimation/
+human_pose_estimation/
 │
 ├── input/
-│   └── dance.mp4
+│   ├── dance.mp4
+│   └── .gitkeep
 │
 ├── output/
-│   └── skeleton_output.mp4
+│   └── .gitkeep
+│
+├── results/
+│   ├── skeleton_preview.png
+│   └── .gitkeep
 │
 ├── main.py
 ├── requirements.txt
-└── README.md
+├── README.md
+└── .gitignore
 ```
+
+**Note:** The generated output video is saved locally in the `output` directory. Large video files and model weights are excluded from GitHub through `.gitignore`.
 
 ## 🚀 Installation and Setup
 
-### 1. Clone the Repository
+### Prerequisites
+
+- Python 3.9 or later
+- Git
+- Visual Studio Code (recommended)
+- Internet connection for downloading the pretrained YOLO model
+
+### Step 1: Clone the Repository
 
 ```bash
-git clone YOUR_REPOSITORY_URL
+git clone https://github.com/chetnagurjar/human_pose_estimation.git
 ```
 
-### 2. Navigate to the Project Directory
+### Step 2: Navigate to the Project Directory
 
 ```bash
-cd Human-Pose-Estimation
+cd human_pose_estimation
 ```
 
-### 3. Install Dependencies
+### Step 3: Install Dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 4. Add Input Video
+### Step 4: Add the Input Video
 
-Place your video inside the `input` folder and name it:
+Place your dancing or movement video inside the `input` folder.
+
+Rename the video:
 
 ```text
 dance.mp4
 ```
 
-### 5. Run the Program
+### Step 5: Run the Program
+
+Execute the following command:
 
 ```bash
 python main.py
 ```
 
-The pretrained YOLO Pose model will be downloaded automatically when required.
+The pretrained YOLO Pose model (`yolo11n-pose.pt`) will be downloaded automatically when required.
 
-## 📊 Output
+## 📊 Project Results
 
-The program generates a video containing:
+### Skeleton Visualization
+
+The following image shows the output generated by the pose estimation system.
+
+![Human Pose Estimation Result](results/skeleton_preview.png)
+
+The visualization contains:
 
 - A completely black background.
 - White dots representing detected body joints.
-- White lines connecting the joints.
-- Skeleton movements corresponding to the person's movements in the original video.
-- No visible original person or video background.
+- White lines connecting the detected keypoints.
+- No original person or video background.
 
-**Output location:**
+### Output Video
+
+The complete processed video is saved at:
 
 ```text
 output/skeleton_output.mp4
 ```
 
-## 🔍 Applications
+The output video follows the person's movements and generates a skeleton representation frame by frame.
 
-Human Pose Estimation can be used in several areas:
+## 💡 Applications
+
+Human Pose Estimation has several practical applications:
 
 - Dance movement analysis.
 - Fitness and exercise tracking.
-- Human activity recognition.
 - Sports performance analysis.
+- Human activity recognition.
 - Gesture recognition.
-- Motion analysis and animation.
+- Motion analysis.
+- Animation and motion capture.
 
 ## 📚 References
 
@@ -142,3 +246,6 @@ Human Pose Estimation can be used in several areas:
 - [OpenCV Documentation](https://docs.opencv.org/)
 - [COCO Dataset](https://cocodataset.org/)
 
+
+  <b>Human Pose Estimation | Computer Vision | YOLO | OpenCV</b>
+</p>
