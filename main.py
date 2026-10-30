@@ -4,32 +4,45 @@ import numpy as np
 from ultralytics import YOLO
 import os
 
-# --------------------------------
+# ==========================================
 # 1. LOAD YOLO POSE MODEL
-# --------------------------------
+# ==========================================
+
+print("Loading YOLO Pose Model...")
 
 model = YOLO("yolo11n-pose.pt")
 
-# --------------------------------
+print("Model loaded successfully!")
+
+# ==========================================
 # 2. VIDEO INPUT AND OUTPUT
-# --------------------------------
+# ==========================================
 
 input_path = "input/dance.mp4"
 output_path = "output/skeleton_output.mp4"
 
 os.makedirs("output", exist_ok=True)
+os.makedirs("results", exist_ok=True)
 
 cap = cv2.VideoCapture(input_path)
 
 if not cap.isOpened():
-    raise Exception("Error: Cannot open input video!")
+    raise Exception("Cannot open input video!")
 
 fps = cap.get(cv2.CAP_PROP_FPS)
+width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+
 if fps <= 0:
     fps = 30
 
-width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+print("Video loaded!")
+print("Resolution:", width, "x", height)
+print("FPS:", fps)
+
+# ==========================================
+# 3. VIDEO WRITER
+# ==========================================
 
 fourcc = cv2.VideoWriter_fourcc(*"mp4v")
 
@@ -41,11 +54,11 @@ out = cv2.VideoWriter(
 )
 
 if not out.isOpened():
-    raise Exception("Error: Cannot create output video!")
+    raise Exception("Cannot create output video!")
 
-# --------------------------------
-# 3. COCO 17 KEYPOINT CONNECTIONS
-# --------------------------------
+# ==========================================
+# 4. COCO 17 KEYPOINT CONNECTIONS
+# ==========================================
 
 skeleton = [
     (0, 1), (0, 2),
@@ -59,11 +72,13 @@ skeleton = [
     (12, 14), (14, 16)
 ]
 
-# --------------------------------
-# 4. PROCESS VIDEO FRAMES
-# --------------------------------
+CONFIDENCE_THRESHOLD = 0.4
 
-confidence_threshold = 0.4
+# ==========================================
+# 5. PROCESS VIDEO FRAME BY FRAME
+# ==========================================
+
+frame_count = 0
 
 while True:
 
@@ -72,7 +87,9 @@ while True:
     if not ret:
         break
 
-    # Create a completely black background
+    frame_count += 1
+
+    # Create completely black background
     black_frame = np.zeros(
         (height, width, 3),
         dtype=np.uint8
@@ -85,36 +102,43 @@ while True:
         verbose=False
     )
 
-    # Process detected people
+    # ======================================
+    # 6. EXTRACT KEYPOINTS
+    # ======================================
+
     for result in results:
 
         if result.keypoints is None:
             continue
 
         keypoints = result.keypoints.xy.cpu().numpy()
+        confidences = result.keypoints.conf
 
-        if result.keypoints.conf is not None:
-            confidences = result.keypoints.conf.cpu().numpy()
+        if confidences is not None:
+            confidences = confidences.cpu().numpy()
         else:
             confidences = np.ones(
                 (len(keypoints), 17)
             )
 
-        # Process each detected person
+        # Process every detected person
         for person_index, person in enumerate(keypoints):
 
             person_conf = confidences[person_index]
 
-            # Draw skeleton connections
+            # ==================================
+            # 7. DRAW SKELETON CONNECTIONS
+            # ==================================
+
             for point1, point2 in skeleton:
 
-                x1, y1 = person[point1]
-                x2, y2 = person[point2]
-
                 if (
-                    person_conf[point1] > confidence_threshold
-                    and person_conf[point2] > confidence_threshold
+                    person_conf[point1] > CONFIDENCE_THRESHOLD
+                    and person_conf[point2] > CONFIDENCE_THRESHOLD
                 ):
+
+                    x1, y1 = person[point1]
+                    x2, y2 = person[point2]
 
                     cv2.line(
                         black_frame,
@@ -125,10 +149,13 @@ while True:
                         cv2.LINE_AA
                     )
 
-            # Draw keypoint circles
+            # ==================================
+            # 8. DRAW WHITE KEYPOINT DOTS
+            # ==================================
+
             for point_index, (x, y) in enumerate(person):
 
-                if person_conf[point_index] > confidence_threshold:
+                if person_conf[point_index] > CONFIDENCE_THRESHOLD:
 
                     cv2.circle(
                         black_frame,
@@ -139,22 +166,32 @@ while True:
                         cv2.LINE_AA
                     )
 
-    # Save processed frame
+    # ======================================
+    # 9. SAVE PROCESSED FRAME
+    # ======================================
+
     out.write(black_frame)
 
-    # Display output while processing
-    cv2.imshow("Human Pose Estimation", black_frame)
+    # Display processed video
+    cv2.imshow(
+        "Human Pose Estimation",
+        black_frame
+    )
 
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
-# --------------------------------
-# 5. RELEASE RESOURCES
-# --------------------------------
+    if frame_count % 30 == 0:
+        print("Processed frames:", frame_count)
+
+# ==========================================
+# 10. RELEASE RESOURCES
+# ==========================================
 
 cap.release()
 out.release()
 cv2.destroyAllWindows()
 
-print("Pose estimation completed!")
-print("Output saved at:", output_path)
+print("\nPose Estimation Completed!")
+print("Total frames:", frame_count)
+print("Output saved:", output_path)
